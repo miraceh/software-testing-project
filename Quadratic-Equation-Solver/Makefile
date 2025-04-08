@@ -33,6 +33,39 @@ mutate: build
 		--sourceDirs . || (echo "❌ PITest failed." && exit 1)
 	@echo "✅ Mutation testing completed. Report available at pit-report/index.html"
 
+coverage: build
+	@echo "▶ Running tests with Jacoco agent (even if some fail)..."
+	@java -javaagent:lib/jacocoagent.jar=destfile=jacoco.exec \
+		-jar lib/junit-platform-console-standalone-1.10.2.jar \
+		-cp out \
+		--scan-class-path || echo "⚠️ Some tests failed, but coverage will still be reported."
+
+	@echo "📊 Generating Jacoco HTML report for Quadratic..."
+	@java -jar lib/jacococli.jar report jacoco.exec \
+		--sourcefiles . \
+		--classfiles out/Quadratic.class \
+		--html jacoco-report \
+		--name "Quadratic Coverage"
+	@echo "✅ Report generated at jacoco-report/index.html"
+
+# Open PITest HTML report in Edge from WSL
+mutation-report:
+	@echo "📂 Opening PIT mutation report in Edge..."
+	@if [ -e pit-report/index.html ]; then \
+		powershell.exe /c start pit-report/index.html; \
+	else \
+		echo "❌ PIT report not found. Please run 'make mutate' first."; \
+	fi
+
+# Open Jacoco HTML coverage report in Edge from WSL
+coverage-report:
+	@echo "📂 Opening Jacoco coverage report in Edge..."
+	@if [ -e jacoco-report/index.html ]; then \
+		powershell.exe /c start jacoco-report/index.html; \
+	else \
+		echo "❌ Jacoco report not found. Please run 'make coverage' first."; \
+	fi
+
 # Clean generated input files and class files
 clean:
 	@echo "Cleaning up class files and generated files in genCase/z3/..."

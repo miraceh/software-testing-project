@@ -2,3 +2,5 @@
 genCase
 lib
 pit-report
+jacoco-report
+jacoco.exec
