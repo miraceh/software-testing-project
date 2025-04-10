@@ -1,6 +1,9 @@
 *.class
 genCase
 lib
-pit-report
-jacoco-report
-jacoco.exec
+pit-report*
+jacoco-report*
+jacoco*.exec
+*.jar
+*.log
+actsout.case

@@ -80,17 +80,33 @@ public class QuadraticTester {
     private static BigDecimal[] parseComplex(String s) {
         s = s.replaceAll("\\s+", "");
 
-        // Support formats like a+-bi or a-+bi or a+bi
-        Pattern p = Pattern.compile("([+-]?[\\d\\.Ee]+)([+-])([+-]?[\\d\\.Ee]+)i");
+        // Normalize things like "4999999 + -1i" → "4999999 - 1i"
+        s = s.replaceAll("\\+\\-", "-");
+        s = s.replaceAll("\\-\\-", "+");
+
+        // Handle special case: "i" or "-i"
+        if (s.equals("i")) {
+            return new BigDecimal[] { BigDecimal.ZERO, BigDecimal.ONE };
+        } else if (s.equals("-i")) {
+            return new BigDecimal[] { BigDecimal.ZERO, BigDecimal.ONE.negate() };
+        }
+
+        // Match patterns like "a+bi" or "a-bi"
+        Pattern p = Pattern.compile("([+-]?[\\d\\.Ee]+)([+-])([\\d\\.Ee]+)i");
         Matcher m = p.matcher(s);
         if (m.matches()) {
             BigDecimal real = new BigDecimal(m.group(1));
             BigDecimal imag = new BigDecimal(m.group(3));
-            return new BigDecimal[]{ real, imag };
-        } else {
-            return new BigDecimal[]{ new BigDecimal(s), BigDecimal.ZERO };
+            if (m.group(2).equals("-")) {
+                imag = imag.negate();
+            }
+            return new BigDecimal[] { real, imag };
         }
+
+        // Otherwise, assume pure real
+        return new BigDecimal[] { new BigDecimal(s), BigDecimal.ZERO };
     }
+    
 
     // === Compare two complex strings with epsilon tolerance ===
     private static boolean complexEquals(String a, String b, BigDecimal epsilon) {
@@ -113,19 +129,33 @@ public class QuadraticTester {
         BigDecimal EPS = new BigDecimal("1e-12");
 
         if ((expected.expectedX1 != null && actual.x1 == null) ||
-            (expected.expectedX2 != null && expected.expectedX2.length() > 0 && actual.x2 == null)) {
+                (expected.expectedX2 != null && expected.expectedX2.length() > 0 && actual.x2 == null)) {
+
+            System.out.println("❌ One of the actual roots is null but expected was not:");
+            if (expected.expectedX1 != null && actual.x1 == null) {
+                System.out.printf("   Expected x1: %s%n", expected.expectedX1);
+                System.out.println("   Actual x1: null");
+            }
+            if (expected.expectedX2 != null && expected.expectedX2.length() > 0 && actual.x2 == null) {
+                System.out.printf("   Expected x2: %s%n", expected.expectedX2);
+                System.out.println("   Actual x2: null");
+            }
             return false;
         }
 
         if (expected.expectedX1 != null &&
-            !complexEquals(actual.x1, expected.expectedX1, EPS)) {
+                !complexEquals(actual.x1, expected.expectedX1, EPS)) {
             System.out.println("❌ x1 mismatch");
+            System.out.printf("   Expected x1: %s%n", expected.expectedX1);
+            System.out.printf("   Actual   x1: %s%n", actual.x1);
             return false;
         }
 
         if (expected.expectedX2 != null && expected.expectedX2.length() > 0 &&
-            !complexEquals(actual.x2, expected.expectedX2, EPS)) {
+                !complexEquals(actual.x2, expected.expectedX2, EPS)) {
             System.out.println("❌ x2 mismatch");
+            System.out.printf("   Expected x2: %s%n", expected.expectedX2);
+            System.out.printf("   Actual   x2: %s%n", actual.x2);
             return false;
         }
 

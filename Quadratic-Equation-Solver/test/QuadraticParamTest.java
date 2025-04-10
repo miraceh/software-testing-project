@@ -1,13 +1,17 @@
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+
 import java.io.File;
 import java.util.stream.Stream;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class QuadraticParamTest {
 
     static Stream<File> inputFiles() {
-        File folder = new File("./genCase/z3");
+        // Read test case source from system property
+        String source = System.getProperty("source", "z3");
+        File folder = new File("./genCase/" + source);
         File[] files = folder.listFiles((dir, name) -> name.endsWith(".txt"));
         return files != null ? Stream.of(files) : Stream.empty();
     }
