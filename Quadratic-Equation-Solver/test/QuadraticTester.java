@@ -109,7 +109,7 @@ public class QuadraticTester {
     
 
     // === Compare two complex strings with epsilon tolerance ===
-    private static boolean complexEquals(String a, String b, BigDecimal epsilon) {
+    public static boolean complexEquals(String a, String b, BigDecimal epsilon) {
         if (a == null || b == null) return false;
         try {
             BigDecimal[] ca = parseComplex(a);
