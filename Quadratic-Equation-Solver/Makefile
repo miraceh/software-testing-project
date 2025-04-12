@@ -143,6 +143,20 @@ actsmutate: build
 		--jvmArgs="-Dsource=acts" || (echo "❌ PITest (ACTS) failed." && exit 1)
 	@echo "✅ Mutation testing (ACTS) completed. Report at pit-report-acts/index.html"
 
+build/ActsMutationScore.class: ACTS/ActsMutationScore.java
+	@echo "📦 Compiling ACTS mutationScore.java..."
+	@javac -cp "lib/*:build" -d build ACTS/ActsMutationScore.java || (echo "❌ ACTS mutationScore compilation failed." && exit 1)
+
+actsmutationBoost: build build/ActsMutationScore.class
+	@echo "Running PIT mutation testing for ACTS + Boost..."
+	@java -cp "lib/*:build" org.pitest.mutationtest.commandline.MutationCoverageReport \
+		--reportDir pit-report-acts-boost \
+		--targetClasses Quadratic \
+		--targetTests QuadraticParamTest,ActsMutationScore \
+		--sourceDirs . \
+		--jvmArgs="-Dsource=acts" || (echo "❌ PITest (ACTS + Boost) failed." && exit 1)
+	@echo "✅ Mutation testing (ACTS + Boost) completed. Report at pit-report-acts-boost/index.html"
+
 # Run Jacoco test coverage for ACTS input
 actscoverage: clean actscase build
 	@echo "▶ Running tests with Jacoco agent (ACTS input)..."
@@ -159,6 +173,28 @@ actscoverage: clean actscase build
 		--html jacoco-report-acts \
 		--name "Quadratic Coverage (ACTS)"
 	@echo "✅ Report generated at jacoco-report-acts/index.html"
+
+build/ActsCoverageScore.class: ACTS/ActsCoverageScore.java
+	@echo "📦 Compiling ACTS coverageScore.java..."
+	@javac -cp "lib/*:build" -d build ACTS/ActsCoverageScore.java || (echo "❌ ACTS coverageScore compilation failed." && exit 1)
+
+actscoverageBoost: actscase build build/ActsCoverageScore.class
+	@echo "▶ Running tests with Jacoco agent (ACTS + Boost)..."
+	@java -javaagent:lib/jacocoagent.jar=destfile=jacoco-acts-boost.exec \
+		-Dsource=acts \
+		-jar lib/junit-platform-console-standalone-1.10.2.jar \
+		--class-path build \
+		--select-class=QuadraticParamTest \
+		--select-class=ActsCoverageScore || echo "⚠️ Some ACTS tests failed, but coverage will still be reported."
+
+	@echo "📊 Generating Jacoco HTML report (ACTS + Boost)..."
+	@java -jar lib/jacococli.jar report jacoco-acts-boost.exec \
+		--sourcefiles . \
+		--classfiles build/Quadratic.class \
+		--html jacoco-report-acts-boost \
+		--name "Quadratic Coverage (ACTS + Boost)"
+	@echo "✅ Report generated at jacoco-report-acts-boost/index.html"
+
 
 # Open PITest HTML report for ACTS input
 actsmutation-report:
@@ -178,6 +214,22 @@ actscoverage-report: actscoverage
 		echo "❌ Jacoco report not found. Please run 'make actscoverage' first."; \
 	fi
 
+actscoverage-boost-report: actscoverageBoost
+	@echo "📂 Opening Jacoco coverage report (ACTS + Boost) in Edge..."
+	@if [ -e jacoco-report-acts-boost/index.html ]; then \
+		powershell.exe /c start jacoco-report-acts-boost/index.html; \
+	else \
+		echo "❌ Jacoco report not found. Please run 'make actscoverageBoost' first."; \
+	fi
+
+actsmutation-boost-report: actsmutationBoost
+	@echo "📂 Opening PIT mutation report (ACTS + Boost) in Edge..."
+	@if [ -e pit-report-acts-boost/index.html ]; then \
+		powershell.exe /c start pit-report-acts-boost/index.html; \
+	else \
+		echo "❌ PIT report not found. Please run 'make actsmutationBoost' first."; \
+	fi
+
 
 # Clean generated input files and class files
 clean:
@@ -186,8 +238,8 @@ clean:
 	@rm -f genCase/acts/*
 	@rm -f build/*
 	@rm -f jacoco-*.exec
-	@rm -rf jacoco-report-z3 jacoco-report-z3-boost jacoco-report-acts
-	@rm -rf pit-report-z3 pit-report-z3-boost pit-report-acts
+	@rm -rf jacoco-report-z3 jacoco-report-z3-boost jacoco-report-acts jacoco-report-acts-boost
+	@rm -rf pit-report-z3 pit-report-z3-boost pit-report-acts pit-report-acts-boost
 	@echo "✅ Clean complete."
 
 z3: z3case z3test
