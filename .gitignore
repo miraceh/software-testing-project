@@ -7,3 +7,4 @@ jacoco*.exec
 *.jar
 *.log
 actsout.case
+z3case.txt

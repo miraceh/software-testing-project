@@ -108,6 +108,7 @@ actsmutation-boost-report: actsmutationBoost
 clean:
 	@echo "🧹 Cleaning up all generated files and reports..."
 	@rm -f genCase/acts/*
+	@rm -f genCase/z3/*
 	@rm -f $(BUILD_DIR)/*
 	@rm -f jacoco-*.exec
 	@rm -rf jacoco-report-acts jacoco-report-acts-boost
@@ -118,18 +119,19 @@ clean:
 acts: actscase actstest
 all: acts
 
-# Run all Python scripts under zSolver/
 z3case:
-	@echo "Running all Z3 input generators in zSolver/..."
-	@for f in zSolver/*.py; do \
-		echo ">>> Running $$f"; \
-		python3 $$f || exit 1; \
-	done
+	@echo "▶ Generating Z3 cases with gencase.py..."
+	@python3 zSolver/gencase.py || (echo "❌ gencase.py failed." && exit 1)
+
+	@echo "📂 Parsing Z3 output to input files with parserOut.py..."
+	@python3 zSolver/parserOut.py || (echo "❌ parserOut.py failed." && exit 1)
+
+	@echo "✅ Z3 test cases generated in genCase/z3/"
 
 # Run JUnit tests for Z3 input
 z3test: z3case build
 	@echo "Running JUnit tests (Z3 input)..."
-	@java -jar $(JUNIT_JAR) \
+	@java -Dsource=z3 -jar $(JUNIT_JAR) \
 		-cp $(BUILD_DIR) \
 		--scan-class-path || (echo "❌ Some Z3 tests failed." && exit 1)
 	@echo "✅ All Z3 tests completed."
@@ -137,7 +139,13 @@ z3test: z3case build
 # Mutation Testing (Z3)
 z3mutation: build
 	@echo "Running PIT mutation testing (Z3 input)..."
-	@echo "[TODO] Add PIT command for Z3 mutation testing"
+	@java -cp "../lib/*:build" org.pitest.mutationtest.commandline.MutationCoverageReport \
+		--reportDir pit-report-z3 \
+		--targetClasses DateHelper \
+		--targetTests DataHelperTest \
+		--sourceDirs . \
+		--jvmArgs="-Dsource=z3" || (echo "❌ PITest (Z3) failed." && exit 1)
+	@echo "✅ Mutation testing (Z3) completed. Report at pit-report-z3/index.html"
 
 build/mutationScore.class: zSolver/mutationScore.java
 	@echo "📦 Compiling mutationScore.java..."
@@ -148,9 +156,21 @@ z3mutationBoost: build build/mutationScore.class
 	@echo "[TODO] Add Boost PIT command for Z3"
 
 # Jacoco Coverage (Z3)
-z3coverage: z3case build
+z3coverage: clean z3case build
 	@echo "▶ Running tests with Jacoco agent (Z3 input)..."
-	@echo "[TODO] Add Jacoco test execution and report generation for Z3"
+	@java -javaagent:../lib/jacocoagent.jar=destfile=jacoco-z3.exec \
+		-Dsource=z3 \
+		-jar ../lib/junit-platform-console-standalone-1.10.2.jar \
+		-cp build \
+		--scan-class-path || echo "⚠️ Some Z3 tests failed, but coverage will still be reported."
+
+	@echo "📊 Generating Jacoco HTML report (Z3)..."
+	@java -jar ../lib/jacococli.jar report jacoco-z3.exec \
+		--sourcefiles . \
+		--classfiles build/DateHelper.class \
+		--html jacoco-report-z3 \
+		--name "DateHelper Coverage (Z3)"
+	@echo "✅ Report generated at jacoco-report-z3/index.html"
 
 build/coverageScore.class: zSolver/coverageScore.java
 	@echo "📦 Compiling coverageScore.java..."
@@ -163,7 +183,11 @@ z3coverageBoost: z3case build build/coverageScore.class
 # Report Opening Shortcuts (Z3)
 z3mutation-report: z3mutation
 	@echo "📂 Opening PIT mutation report (Z3) in Edge..."
-	@echo "[TODO] Add script to open mutation report"
+	@if [ -e pit-report-z3/index.html ]; then \
+		powershell.exe /c start pit-report-z3/index.html; \
+	else \
+		echo "❌ PIT report not found. Please run 'make z3mutation' first."; \
+	fi
 
 z3mutation-boost-report: z3mutationBoost
 	@echo "📂 Opening PIT mutation report (Z3 + Boost) in Edge..."
@@ -171,7 +195,11 @@ z3mutation-boost-report: z3mutationBoost
 
 z3coverage-report: z3coverage
 	@echo "📂 Opening Jacoco coverage report (Z3) in Edge..."
-	@echo "[TODO] Add script to open coverage report"
+	@if [ -e jacoco-report-z3/index.html ]; then \
+		powershell.exe /c start jacoco-report-z3/index.html; \
+	else \
+		echo "❌ Jacoco report not found. Please run 'make z3coverage' first."; \
+	fi
 
 z3coverage-boost-report: z3coverageBoost
 	@echo "📂 Opening Jacoco coverage report (Z3 + Boost) in Edge..."
