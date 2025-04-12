@@ -21,13 +21,13 @@ actscase:
 build:
 	@echo "Compiling Java sources and tests..."
 	@mkdir -p build
-	@javac -cp "lib/*" -d build *.java test/*.java || (echo "❌ Compilation failed." && exit 1)
+	@javac -cp "../lib/*" -d build *.java test/*.java || (echo "❌ Compilation failed." && exit 1)
 	@echo "✅ Compilation succeeded."
 
 # Run JUnit tests
 z3test: z3case build
 	@echo "Running JUnit tests..."
-	@java -jar lib/junit-platform-console-standalone-1.10.2.jar \
+	@java -jar ../lib/junit-platform-console-standalone-1.10.2.jar \
 		-cp build \
 		--scan-class-path || (echo "❌ Some tests failed." && exit 1)
 	@echo "✅ All tests completed."
@@ -35,14 +35,14 @@ z3test: z3case build
 actstest: actscase build
 	@echo "▶ Running JUnit tests with ACTS input files..."
 	@java -Dsource=acts \
-		-jar lib/junit-platform-console-standalone-1.10.2.jar \
+		-jar ../lib/junit-platform-console-standalone-1.10.2.jar \
 		-cp build \
 		--scan-class-path || (echo "❌ Some ACTS tests failed." && exit 1)
 	@echo "✅ All ACTS-based tests completed."
 
 z3mutation: build
 	@echo "Running PIT mutation testing (Z3 input)..."
-	@java -cp "lib/*:build" org.pitest.mutationtest.commandline.MutationCoverageReport \
+	@java -cp "../lib/*:build" org.pitest.mutationtest.commandline.MutationCoverageReport \
 		--reportDir pit-report-z3 \
 		--targetClasses Quadratic \
 		--targetTests QuadraticParamTest \
@@ -52,11 +52,11 @@ z3mutation: build
 
 build/mutationScore.class: zSolver/mutationScore.java
 	@echo "📦 Compiling mutationScore.java..."
-	@javac -cp "lib/*:build" -d build zSolver/mutationScore.java || (echo "❌ mutationScore compilation failed." && exit 1)
+	@javac -cp "../lib/*:build" -d build zSolver/mutationScore.java || (echo "❌ mutationScore compilation failed." && exit 1)
 
 z3mutationBoost: build build/mutationScore.class
 	@echo "Running PIT mutation testing for mutationScore.java..."
-	@java -cp "lib/*:build" org.pitest.mutationtest.commandline.MutationCoverageReport \
+	@java -cp "../lib/*:build" org.pitest.mutationtest.commandline.MutationCoverageReport \
 		--reportDir pit-report-z3-boost \
 		--targetClasses Quadratic \
 		--targetTests QuadraticParamTest,mutationScore \
@@ -66,14 +66,14 @@ z3mutationBoost: build build/mutationScore.class
 
 z3coverage: z3case build
 	@echo "▶ Running tests with Jacoco agent (Z3 input)..."
-	@java -javaagent:lib/jacocoagent.jar=destfile=jacoco-z3.exec \
+	@java -javaagent:../lib/jacocoagent.jar=destfile=jacoco-z3.exec \
 		-Dsource=z3 \
-		-jar lib/junit-platform-console-standalone-1.10.2.jar \
+		-jar ../lib/junit-platform-console-standalone-1.10.2.jar \
 		-cp build \
 		--scan-class-path || echo "⚠️ Some Z3 tests failed, but coverage will still be reported."
 
 	@echo "📊 Generating Jacoco HTML report (Z3)..."
-	@java -jar lib/jacococli.jar report jacoco-z3.exec \
+	@java -jar ../lib/jacococli.jar report jacoco-z3.exec \
 		--sourcefiles . \
 		--classfiles build/Quadratic.class \
 		--html jacoco-report-z3 \
@@ -82,18 +82,18 @@ z3coverage: z3case build
 
 build/coverageScore.class: zSolver/coverageScore.java
 	@echo "📦 Compiling coverageScore.java..."
-	@javac -cp "lib/*:build" -d build zSolver/coverageScore.java || (echo "❌ coverageScore compilation failed." && exit 1)
+	@javac -cp "../lib/*:build" -d build zSolver/coverageScore.java || (echo "❌ coverageScore compilation failed." && exit 1)
 
 z3coverageBoost: z3case build build/coverageScore.class
 	@echo "▶ Running tests with Jacoco agent (Z3 + Boost)..."
-	@java -javaagent:lib/jacocoagent.jar=destfile=jacoco-z3-boost.exec \
+	@java -javaagent:../lib/jacocoagent.jar=destfile=jacoco-z3-boost.exec \
 		-Dsource=z3 \
-		-jar lib/junit-platform-console-standalone-1.10.2.jar \
+		-jar ../lib/junit-platform-console-standalone-1.10.2.jar \
 		-cp build \
 		--select-class=QuadraticParamTest --select-class=coverageScore || echo "⚠️ Some Z3 tests failed, but coverage will still be reported."
 
 	@echo "📊 Generating Jacoco HTML report (Z3 + Boost)..."
-	@java -jar lib/jacococli.jar report jacoco-z3-boost.exec \
+	@java -jar ../lib/jacococli.jar report jacoco-z3-boost.exec \
 		--sourcefiles . \
 		--classfiles build/Quadratic.class \
 		--html jacoco-report-z3-boost \
@@ -135,7 +135,7 @@ z3coverage-boost-report: z3coverageBoost
 # Run PITest mutation testing for ACTS
 actsmutate: build
 	@echo "Running PIT mutation testing for ACTS input..."
-	@java -cp "lib/*:build" org.pitest.mutationtest.commandline.MutationCoverageReport \
+	@java -cp "../lib/*:build" org.pitest.mutationtest.commandline.MutationCoverageReport \
 		--reportDir pit-report-acts \
 		--targetClasses Quadratic \
 		--targetTests QuadraticParamTest \
@@ -145,11 +145,11 @@ actsmutate: build
 
 build/ActsMutationScore.class: ACTS/ActsMutationScore.java
 	@echo "📦 Compiling ACTS mutationScore.java..."
-	@javac -cp "lib/*:build" -d build ACTS/ActsMutationScore.java || (echo "❌ ACTS mutationScore compilation failed." && exit 1)
+	@javac -cp "../lib/*:build" -d build ACTS/ActsMutationScore.java || (echo "❌ ACTS mutationScore compilation failed." && exit 1)
 
 actsmutationBoost: build build/ActsMutationScore.class
 	@echo "Running PIT mutation testing for ACTS + Boost..."
-	@java -cp "lib/*:build" org.pitest.mutationtest.commandline.MutationCoverageReport \
+	@java -cp "../lib/*:build" org.pitest.mutationtest.commandline.MutationCoverageReport \
 		--reportDir pit-report-acts-boost \
 		--targetClasses Quadratic \
 		--targetTests QuadraticParamTest,ActsMutationScore \
@@ -160,14 +160,14 @@ actsmutationBoost: build build/ActsMutationScore.class
 # Run Jacoco test coverage for ACTS input
 actscoverage: clean actscase build
 	@echo "▶ Running tests with Jacoco agent (ACTS input)..."
-	@java -javaagent:lib/jacocoagent.jar=destfile=jacoco-acts.exec \
+	@java -javaagent:../lib/jacocoagent.jar=destfile=jacoco-acts.exec \
 		-Dsource=acts \
-		-jar lib/junit-platform-console-standalone-1.10.2.jar \
+		-jar ../lib/junit-platform-console-standalone-1.10.2.jar \
 		-cp build \
 		--scan-class-path || echo "⚠️ Some ACTS tests failed, but coverage will still be reported."
 
 	@echo "📊 Generating Jacoco HTML report (ACTS)..."
-	@java -jar lib/jacococli.jar report jacoco-acts.exec \
+	@java -jar ../lib/jacococli.jar report jacoco-acts.exec \
 		--sourcefiles . \
 		--classfiles build/Quadratic.class \
 		--html jacoco-report-acts \
@@ -176,19 +176,19 @@ actscoverage: clean actscase build
 
 build/ActsCoverageScore.class: ACTS/ActsCoverageScore.java
 	@echo "📦 Compiling ACTS coverageScore.java..."
-	@javac -cp "lib/*:build" -d build ACTS/ActsCoverageScore.java || (echo "❌ ACTS coverageScore compilation failed." && exit 1)
+	@javac -cp "../lib/*:build" -d build ACTS/ActsCoverageScore.java || (echo "❌ ACTS coverageScore compilation failed." && exit 1)
 
 actscoverageBoost: actscase build build/ActsCoverageScore.class
 	@echo "▶ Running tests with Jacoco agent (ACTS + Boost)..."
-	@java -javaagent:lib/jacocoagent.jar=destfile=jacoco-acts-boost.exec \
+	@java -javaagent:../lib/jacocoagent.jar=destfile=jacoco-acts-boost.exec \
 		-Dsource=acts \
-		-jar lib/junit-platform-console-standalone-1.10.2.jar \
+		-jar ../lib/junit-platform-console-standalone-1.10.2.jar \
 		--class-path build \
 		--select-class=QuadraticParamTest \
 		--select-class=ActsCoverageScore || echo "⚠️ Some ACTS tests failed, but coverage will still be reported."
 
 	@echo "📊 Generating Jacoco HTML report (ACTS + Boost)..."
-	@java -jar lib/jacococli.jar report jacoco-acts-boost.exec \
+	@java -jar ../lib/jacococli.jar report jacoco-acts-boost.exec \
 		--sourcefiles . \
 		--classfiles build/Quadratic.class \
 		--html jacoco-report-acts-boost \

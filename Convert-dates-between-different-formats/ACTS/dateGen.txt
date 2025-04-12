@@ -1,0 +1,7 @@
+[System]
+Name: dateConverter
+
+[Parameter]
+inputDate (enum): 12/04/2024, 2024-04-12, nan
+inputFormat (enum): default, yyyy-MM-dd, auto, nan
+outputFormat (enum): dd/MM/yyyy, yyyy-MM-dd, default, nan
