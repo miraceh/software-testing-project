@@ -1,10 +1,9 @@
 *.class
 genCase
-lib
 pit-report*
 jacoco-report*
 jacoco*.exec
-*.jar
+acts*.jar
 *.log
 actsout.case
 z3case.txt
