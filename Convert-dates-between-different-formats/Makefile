@@ -35,7 +35,7 @@ actstest: actscase build
 	@echo "✅ All ACTS-based tests completed."
 
 # Mutation Testing (ACTS)
-actsmutate: build
+actsmutation: build
 	@echo "Running PIT mutation testing for ACTS input..."
 	@java -cp "../lib/*:build" org.pitest.mutationtest.commandline.MutationCoverageReport \
 		--reportDir pit-report-acts \
@@ -98,12 +98,12 @@ actscoverageBoost: actscase build build/ActsCoverageScore.class
 	@echo "✅ Report generated at jacoco-report-acts-boost/index.html"
 
 # Open PITest HTML report for ACTS input
-actsmutation-report: actsmutate
+actsmutation-report: actsmutation
 	@echo "📂 Opening PIT mutation report (ACTS) in Edge..."
 	@if [ -e pit-report-acts/index.html ]; then \
 		powershell.exe /c start pit-report-acts/index.html; \
 	else \
-		echo "❌ PIT report not found. Please run 'make actsmutate' first."; \
+		echo "❌ PIT report not found. Please run 'make actsmutation' first."; \
 	fi
 
 # Open Jacoco HTML report for ACTS input

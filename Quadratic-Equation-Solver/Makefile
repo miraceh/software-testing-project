@@ -133,7 +133,7 @@ z3coverage-boost-report: z3coverageBoost
 	fi
 
 # Run PITest mutation testing for ACTS
-actsmutate: build
+actsmutation: build
 	@echo "Running PIT mutation testing for ACTS input..."
 	@java -cp "../lib/*:build" org.pitest.mutationtest.commandline.MutationCoverageReport \
 		--reportDir pit-report-acts \
@@ -202,7 +202,7 @@ actsmutation-report:
 	@if [ -e pit-report-acts/index.html ]; then \
 		powershell.exe /c start pit-report-acts/index.html; \
 	else \
-		echo "❌ PIT report not found. Please run 'make actsmutate' first."; \
+		echo "❌ PIT report not found. Please run 'make actsmutation' first."; \
 	fi
 
 # Open Jacoco HTML report for ACTS input
