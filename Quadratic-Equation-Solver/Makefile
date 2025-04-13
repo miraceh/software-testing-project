@@ -10,7 +10,7 @@ z3case:
 
 actscase:
 	@echo "▶ Generating ACTS cases with quadratic.txt..."
-	@java -jar ACTS/acts_3.3.jar ACTS/quadratic.txt ACTS/actsout.case || (echo "❌ ACTS generation failed." && exit 1)
+	@java -jar ACTS/acts.jar ACTS/quadratic.txt ACTS/actsout.case || (echo "❌ ACTS generation failed." && exit 1)
 
 	@echo "📂 Parsing ACTS output to input files..."
 	@python3 ACTS/parserOut.py || (echo "❌ Python parse failed." && exit 1)

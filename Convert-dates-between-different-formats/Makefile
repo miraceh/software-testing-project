@@ -11,7 +11,7 @@ SOURCES=DateHelper.java \
 # Generate ACTS cases
 actscase:
 	@echo "▶ Generating ACTS cases with dateGen.txt..."
-	@java -jar ACTS/acts_3.3.jar ACTS/dateGen.txt ACTS/actsout.case || (echo "❌ ACTS generation failed." && exit 1)
+	@java -jar ACTS/acts.jar ACTS/dateGen.txt ACTS/actsout.case || (echo "❌ ACTS generation failed." && exit 1)
 
 	@echo "📂 Parsing ACTS output to input files..."
 	@python3 ACTS/parserOut.py || (echo "❌ Python parse failed." && exit 1)
