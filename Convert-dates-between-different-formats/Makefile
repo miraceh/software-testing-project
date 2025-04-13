@@ -47,11 +47,17 @@ actsmutate: build
 
 build/ActsMutationScore.class: ACTS/ActsMutationScore.java
 	@echo "📦 Compiling ACTS mutationScore.java..."
-	@echo "[TODO] Compile ActsMutationScore.java"
+	@javac -cp "../lib/*:build" -d build ACTS/ActsMutationScore.java || (echo "❌ ACTS mutationScore compilation failed." && exit 1)
 
 actsmutationBoost: build build/ActsMutationScore.class
 	@echo "Running PIT mutation testing for ACTS + Boost..."
-	@echo "[TODO] Add PIT Boost mutation testing"
+	@java -cp "../lib/*:build" org.pitest.mutationtest.commandline.MutationCoverageReport \
+		--reportDir pit-report-acts-boost \
+		--targetClasses DateHelper \
+		--targetTests DataHelperTest,ActsMutationScore \
+		--sourceDirs . \
+		--jvmArgs="-Dsource=acts" || (echo "❌ PITest (ACTS + Boost) failed." && exit 1)
+	@echo "✅ Mutation testing (ACTS + Boost) completed. Report at pit-report-acts-boost/index.html"
 
 # Run Jacoco test coverage for ACTS input
 actscoverage: clean actscase build
@@ -72,14 +78,27 @@ actscoverage: clean actscase build
 
 build/ActsCoverageScore.class: ACTS/ActsCoverageScore.java
 	@echo "📦 Compiling ACTS coverageScore.java..."
-	@echo "[TODO] Compile ActsCoverageScore.java"
+	@javac -cp "../lib/*:build" -d build ACTS/ActsCoverageScore.java || (echo "❌ ACTS coverageScore compilation failed." && exit 1)
 
 actscoverageBoost: actscase build build/ActsCoverageScore.class
 	@echo "▶ Running tests with Jacoco agent (ACTS + Boost)..."
-	@echo "[TODO] Add Jacoco Boost test and report generation"
+	@java -javaagent:../lib/jacocoagent.jar=destfile=jacoco-acts-boost.exec \
+		-Dsource=acts \
+		-jar ../lib/junit-platform-console-standalone-1.10.2.jar \
+		--class-path build \
+		--select-class=DataHelperTest \
+		--select-class=ActsCoverageScore || echo "⚠️ Some ACTS tests failed, but coverage will still be reported."
+
+	@echo "📊 Generating Jacoco HTML report (ACTS + Boost)..."
+	@java -jar ../lib/jacococli.jar report jacoco-acts-boost.exec \
+		--sourcefiles . \
+		--classfiles build/DateHelper.class \
+		--html jacoco-report-acts-boost \
+		--name "DateConvert Coverage (ACTS + Boost)"
+	@echo "✅ Report generated at jacoco-report-acts-boost/index.html"
 
 # Open PITest HTML report for ACTS input
-actsmutation-report:
+actsmutation-report: actsmutate
 	@echo "📂 Opening PIT mutation report (ACTS) in Edge..."
 	@if [ -e pit-report-acts/index.html ]; then \
 		powershell.exe /c start pit-report-acts/index.html; \
@@ -98,21 +117,30 @@ actscoverage-report: actscoverage
 
 actscoverage-boost-report: actscoverageBoost
 	@echo "📂 Opening Jacoco coverage report (ACTS + Boost) in Edge..."
-	@echo "[TODO] Add script to open boosted coverage report"
+	@if [ -e jacoco-report-acts-boost/index.html ]; then \
+		powershell.exe /c start jacoco-report-acts-boost/index.html; \
+	else \
+		echo "❌ Jacoco report not found. Please run 'make actscoverageBoost' first."; \
+	fi
 
 actsmutation-boost-report: actsmutationBoost
 	@echo "📂 Opening PIT mutation report (ACTS + Boost) in Edge..."
-	@echo "[TODO] Add script to open boosted mutation report"
+	@if [ -e pit-report-acts-boost/index.html ]; then \
+		powershell.exe /c start pit-report-acts-boost/index.html; \
+	else \
+		echo "❌ PIT report not found. Please run 'make actsmutationBoost' first."; \
+	fi
 
 # Clean all build and output files
 clean:
 	@echo "🧹 Cleaning up all generated files and reports..."
+	@rm -f ACTS/actsout.case
 	@rm -f genCase/acts/*
 	@rm -f genCase/z3/*
 	@rm -f $(BUILD_DIR)/*
 	@rm -f jacoco-*.exec
-	@rm -rf jacoco-report-acts jacoco-report-acts-boost
-	@rm -rf pit-report-acts pit-report-acts-boost
+	@rm -rf jacoco-report-z3 jacoco-report-z3-boost jacoco-report-acts jacoco-report-acts-boost
+	@rm -rf pit-report-z3 pit-report-z3-boost pit-report-acts pit-report-acts-boost
 	@echo "✅ Clean complete."
 
 # Shortcut targets

@@ -234,6 +234,7 @@ actsmutation-boost-report: actsmutationBoost
 # Clean generated input files and class files
 clean:
 	@echo "🧹 Cleaning up all generated files and reports..."
+	@rm -f ACTS/actsout.case
 	@rm -f genCase/z3/*
 	@rm -f genCase/acts/*
 	@rm -f build/*
