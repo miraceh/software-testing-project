@@ -71,7 +71,7 @@ This project uses `make` to automate build, testing, coverage, and mutation test
 
 ## 📎 Notes
 
-- **ACTS jar file** (`acts_3.3.jar`) is **not publicly hosted**. You need to contact the original authors or refer to official resources. Try searching **"ACTS NIST combinatorial test generation"** on Google for more information.
+- **ACTS jar file** (`acts.jar`) is **not publicly hosted**. You need to contact the original authors or refer to official resources. Try searching **"ACTS NIST combinatorial test generation"** on Google for more information.
 
 - **Makefile must be run inside the appropriate project directory**, such as `Quadratic-Equation-Solver/` or `Convert-dates-between-different-formats/`, depending on your current test target.
 
